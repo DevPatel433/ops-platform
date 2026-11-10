@@ -1,0 +1,46 @@
+{
+  "uid": "ops-overview",
+  "title": "Ops Platform Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {"from": "now-1h", "to": "now"},
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Service availability",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "ops_service_up", "legendFormat": "{{service}}"}],
+      "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {
+        "0": {"text": "DOWN", "color": "red"}, "1": {"text": "UP", "color": "green"}}}]}}
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Health check p95 latency (s)",
+      "gridPos": {"h": 6, "w": 16, "x": 8, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "legendFormat": "{{service}}",
+        "expr": "histogram_quantile(0.95, sum by (service, le) (rate(ops_service_check_latency_seconds_bucket[5m])))"}]
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Host CPU and memory (%)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [
+        {"refId": "A", "expr": "ops_host_cpu_percent", "legendFormat": "cpu"},
+        {"refId": "B", "expr": "ops_host_memory_percent", "legendFormat": "memory"}
+      ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Firing alerts",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "targets": [{"refId": "A", "expr": "ALERTS{alertstate=\"firing\"}", "legendFormat": "{{alertname}}"}]
+    },
+    {
+      "id": 5, "type": "logs", "title": "Error logs (all containers)",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 14},
+      "datasource": {"type": "loki", "uid": "loki"},
+      "targets": [{"refId": "A", "expr": "{container=~\".+\"} |= \"ERROR\""}]
+    }
+  ]
+}

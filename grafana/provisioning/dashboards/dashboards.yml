@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: ops-platform
+    folder: Ops Platform
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
