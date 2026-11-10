@@ -1,0 +1,22 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: ops-webhook
+  group_by: [alertname, service]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: ops-webhook
+    webhook_configs:
+      - url: http://api:8000/api/alerts/webhook
+        send_resolved: true
+    # Add a Slack or PagerDuty receiver here for paging on critical alerts.
+
+inhibit_rules:
+  # If a service is down, suppress its latency warnings.
+  - source_matchers: ['alertname="ServiceDown"']
+    target_matchers: ['alertname="ServiceHighLatency"']
+    equal: [service]
