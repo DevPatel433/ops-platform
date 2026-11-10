@@ -1,0 +1,74 @@
+groups:
+  - name: service-availability
+    rules:
+      - alert: ServiceDown
+        expr: ops_service_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "Health check has failed for more than 1 minute."
+          runbook_url: "/api/runbooks/service-down"
+
+      - alert: ServiceHighLatency
+        expr: histogram_quantile(0.95, sum by (service, le) (rate(ops_service_check_latency_seconds_bucket[5m]))) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} p95 health latency above 1s"
+          runbook_url: "/api/runbooks/service-high-latency"
+
+      - alert: ServiceFlapping
+        expr: changes(ops_service_up[10m]) > 4
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service {{ $labels.service }} is flapping"
+          runbook_url: "/api/runbooks/service-down"
+
+  - name: host-resources
+    rules:
+      - alert: HostHighCPU
+        expr: ops_host_cpu_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: host
+        annotations:
+          summary: "Host CPU above 85%"
+          runbook_url: "/api/runbooks/host-high-cpu"
+
+      - alert: HostHighMemory
+        expr: ops_host_memory_percent > 90
+        for: 5m
+        labels:
+          severity: critical
+          service: host
+        annotations:
+          summary: "Host memory above 90%"
+          runbook_url: "/api/runbooks/host-high-memory"
+
+      - alert: HostDiskAlmostFull
+        expr: ops_host_disk_percent > 85
+        for: 10m
+        labels:
+          severity: warning
+          service: host
+        annotations:
+          summary: "Root disk above 85%"
+          runbook_url: "/api/runbooks/host-disk-almost-full"
+
+  - name: monitoring-pipeline
+    rules:
+      - alert: MonitoringTargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: monitoring
+        annotations:
+          summary: "Scrape target {{ $labels.job }} ({{ $labels.instance }}) is down"
+          runbook_url: "/api/runbooks/monitoring-target-down"
